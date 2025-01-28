@@ -22,7 +22,7 @@ on:
         required: false
         default: '-B'
         type: string
-      mvn_action:
+      mvn_actions:
         description: 'Additional Maven actions'
         required: false
         default: 'package'
