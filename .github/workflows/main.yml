@@ -20,7 +20,12 @@ on:
       mvn_options:
         description: 'Additional Maven options'
         required: false
-        default: '--file'
+        default: '-B'
+        type: string
+      mvn_action:
+        description: 'Additional Maven actions'
+        required: false
+        default: 'package'
         type: string
       jdk_version:
         description: 'JDK version to use'
@@ -54,7 +59,7 @@ jobs:
         cache: maven
         
     - name: Build with Maven
-      run: mvn -B package ${{ inputs.mvn_options }} ${{ inputs.mvn_file }}
+      run: mvn ${{ inputs.mvn_options }} ${{inputs.mvn_actions}} --file ${{ inputs.mvn_file }}
       
     - name: Set up Docker BuildX
       uses: docker/setup-buildx-action@v3
