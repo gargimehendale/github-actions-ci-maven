@@ -1,0 +1,21 @@
+name: Call Reusable Java CI with Maven
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  call-reusable-workflow:
+    uses: github-actions-ci-maven/.github/workflows/main.yml@main
+    with:
+      docker_image_name: "java-maven-ci-project-app"
+      mvn_options: "-B"
+      mvn_actions: "package"
+      mvn_file: "pom.xml"
+      jdk_version: "21"  
+      jdk_distribution: "temurin"
+    secrets:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
