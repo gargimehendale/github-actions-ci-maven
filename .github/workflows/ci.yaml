@@ -20,3 +20,5 @@ jobs:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      JFROG_ARTIFACTORY_TOKEN: ${{ secrets.JFROG_ARTIFACTORY_TOKEN }}
+      JFROG_URL: ${{ secrets.JFROG_URL }}
