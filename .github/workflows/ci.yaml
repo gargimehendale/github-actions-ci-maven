@@ -23,3 +23,4 @@ jobs:
       JFROG_TOKEN: ${{ secrets.JFROG_TOKEN }}
       JFROG_URL: ${{ secrets.JFROG_URL }}
       JFROG_USERNAME: ${{ secrets.JFROG_USERNAME }}
+      JFROG_DOMAIN: ${{ secrets.JFROG_DOMAIN }}
