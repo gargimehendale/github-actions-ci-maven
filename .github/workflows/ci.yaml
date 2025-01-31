@@ -25,3 +25,4 @@ jobs:
       JFROG_USERNAME: ${{ secrets.JFROG_USERNAME }}
       JFROG_DOMAIN: ${{ secrets.JFROG_DOMAIN }}
       JFROG_DOCKER_TOKEN: ${{ secrets.JFROG_DOCKER_TOKEN }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
