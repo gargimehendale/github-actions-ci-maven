@@ -17,13 +17,17 @@ jobs:
       jdk_version: "21"  
       jdk_distribution: "temurin"
     secrets:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      JFROG_TOKEN: ${{ secrets.JFROG_TOKEN }}
-      JFROG_URL: ${{ secrets.JFROG_URL }}
-      JFROG_USERNAME: ${{ secrets.JFROG_USERNAME }}
-      JFROG_DOMAIN: ${{ secrets.JFROG_DOMAIN }}
-      JFROG_DOCKER_TOKEN: ${{ secrets.JFROG_DOCKER_TOKEN }}
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      TEST_SECRET: ${{ secrets.TEST_SECRET }}
+      HCL_CLIENT_ID: ${{ secrets.HCL_CLIENT_ID }}
+      HCL_CLIENT_SECRET: ${{ secrets.HCL_CLIENT_SECRET }}
+      HCL_ORGANIZATION_ID: ${{ secrets.HCL_ORGANIZATION_ID }}
+      HCL_PROJECT_ID: ${{ secrets.HCL_PROJECT_ID }}
+      # DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      # DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      # SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      # JFROG_TOKEN: ${{ secrets.JFROG_TOKEN }}
+      # JFROG_URL: ${{ secrets.JFROG_URL }}
+      # JFROG_USERNAME: ${{ secrets.JFROG_USERNAME }}
+      # JFROG_DOMAIN: ${{ secrets.JFROG_DOMAIN }}
+      # JFROG_DOCKER_TOKEN: ${{ secrets.JFROG_DOCKER_TOKEN }}
+      # SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      # TEST_SECRET: ${{ secrets.TEST_SECRET }}
