@@ -19,8 +19,8 @@ jobs:
     secrets:
       HCP_CLIENT_ID: ${{ secrets.HCP_CLIENT_ID }}
       HCP_CLIENT_SECRET: ${{ secrets.HCP_CLIENT_SECRET }}
-      HCP_ORGANIZATION_ID: ${{ secrets.HCP_ORGANIZATION_ID }}
-      HCP_PROJECT_ID: ${{ secrets.HCP_PROJECT_ID }}
+      # HCP_ORGANIZATION_ID: ${{ secrets.HCP_ORGANIZATION_ID }}
+      # HCP_PROJECT_ID: ${{ secrets.HCP_PROJECT_ID }}
       # DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       # DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       # SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
