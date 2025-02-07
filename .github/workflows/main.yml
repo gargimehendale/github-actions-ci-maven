@@ -69,17 +69,17 @@ jobs:
             echo "::add-mask::$value"
           done < <(hcp vault-secrets run env --app github-ci-secrets)
       
-      - name: Post a message in a channel
-        uses: slackapi/slack-github-action@v2.0.0
-        with:
-          webhook: ${{ env.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            blocks:
-            - type: "section"
-              text:
-                type: "mrkdwn"
-                text: "🚀GitHub Action pipeline started: ${{ inputs.branch }}"
+      # - name: Post a message in a channel
+      #   uses: slackapi/slack-github-action@v2.0.0
+      #   with:
+      #     webhook: ${{ env.SLACK_WEBHOOK_URL }}
+      #     webhook-type: incoming-webhook
+      #     payload: |
+      #       blocks:
+      #       - type: "section"
+      #         text:
+      #           type: "mrkdwn"
+      #           text: "🚀GitHub Action pipeline started: ${{ inputs.branch }}"
 
       - uses: actions/checkout@v4
         with:
