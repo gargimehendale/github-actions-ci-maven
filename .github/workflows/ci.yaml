@@ -8,7 +8,7 @@ on:
 
 jobs:
   call-reusable-workflow:
-    uses: gargimehendale/github-actions-ci-maven-template/.github/workflows/main.yml@main
+    uses: gargimehendale/github-actions-ci-maven/.github/workflows/main.yml@main
     with:
       docker_image_name: "java-maven-ci-project-app"
       mvn_options: "-B"
