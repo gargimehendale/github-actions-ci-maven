@@ -88,6 +88,19 @@ jobs:
           repository: ${{ github.repository }}
           ref: ${{ inputs.branch }}
 
+      - name: Install Tailscale Manually
+        run: |
+          curl -fsSL https://pkgs.tailscale.com/stable/linux-amd64/tailscale.tgz | tar xz
+          sudo install tailscale/tailscale /usr/local/bin/
+          sudo install tailscale/tailscaled /usr/local/bin/
+          tailscale version
+
+      - name: Start Tailscaled (Userspace Mode)
+        run: |
+          sudo tailscaled --tun=userspace-networking --state=mem: &
+          sleep 5
+          tailscale status
+          
       - name: sleep 300;
         run: sleep 100
         
