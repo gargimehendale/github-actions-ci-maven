@@ -89,7 +89,7 @@ jobs:
           ref: ${{ inputs.branch }}
 
       - name: sleep 300;
-        run: sleep 120
+        run: sleep 100
         
       # - name: Set up JDK 17
       #   uses: actions/setup-java@v4
