@@ -100,12 +100,15 @@ jobs:
       #     sudo tailscaled --tun=userspace-networking --state=mem: &
       #     sleep 5
       #     tailscale status
-      - name: Setup Node Version
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
+      # - name: Setup Node Version
+      #   uses: actions/setup-node@v3
+      #   with:
+      #     node-version: 18
+
+      
       - name: sleep 500;
-        run: sleep 600
+        run: |
+          sudo apt install nodejs && sudo apt install npm  &&  sleep 600
         
       # - name: Set up JDK 17
       #   uses: actions/setup-java@v4
