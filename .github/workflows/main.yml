@@ -104,7 +104,6 @@ jobs:
         uses: actions/setup-node@v4.2.0
         with:
           node-version: 14.18.1
-          cache: "npm"
 
       - run: node -v && npm -v
       # - name: java
