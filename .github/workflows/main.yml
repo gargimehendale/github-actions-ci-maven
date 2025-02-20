@@ -100,7 +100,10 @@ jobs:
       #     sudo tailscaled --tun=userspace-networking --state=mem: &
       #     sleep 5
       #     tailscale status
-          
+      - name: Setup Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
       - name: sleep 500;
         run: sleep 600
         
