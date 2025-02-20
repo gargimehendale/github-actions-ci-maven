@@ -108,7 +108,7 @@ jobs:
       
       - name: sleep 500;
         run: |
-          sudo apt update && sudo apt install nodejs && sudo apt install npm  &&  sleep 300
+          sudo apt update && sudo apt install nodejs npm -y &&  sleep 300
         
       # - name: Set up JDK 17
       #   uses: actions/setup-java@v4
