@@ -103,7 +103,7 @@ jobs:
 
       - name: Read .nvmrc
         id: node_version
-        run: echo "version=$(cat .nvmrc) >> $GITHUB_OUTPUT"
+        run: echo "version=$(cat .nvmrc)" >> $GITHUB_OUTPUT
 
       - name: debug node version
         run: |
@@ -112,7 +112,7 @@ jobs:
       - name: Setup Node Version
         uses: actions/setup-node@v4.2.0
         with:
-          node-version: '${{ steps.node_version.outputs.version }}'
+          node-version: ${{ steps.node_version.outputs.version }}
 
       - run: node -v && npm -v
 
