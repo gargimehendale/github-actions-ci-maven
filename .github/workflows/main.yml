@@ -105,7 +105,13 @@ jobs:
         id: node_version
         working-directory: ${{ env.PROJECT_WORKING_DIRECTORY }}
         run: echo "version=$(cat .nvmrc) >> $GITHUB_OUTPUT"
-        
+
+      - name: echo
+        run: |
+          echo $GITHUB_OUTPUT
+          echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+          echo ${{ steps.node_version.outputs.version }}
+          
       - name: Setup Node Version
         uses: actions/setup-node@v4.2.0
         with:
