@@ -49,6 +49,19 @@ jobs:
     # container:
     #   image: maven:3.9.6-eclipse-temurin-17
     steps:
+      - name: Install Tailscale
+        run: |
+          curl -fsSL https://tailscale.com/install.sh | sh
+          sudo tailscaled --state=/tmp/tailscaled.state --socket=/tmp/tailscaled.sock --statedir=/tmp &
+
+      # - name: Connect Tailscale
+      #   run: |
+      #     tailscale up --authkey=${{ secrets.TAILSCALE_AUTHKEY }} --hostname=gha-runner --socket=/tmp/tailscaled.sock
+
+      - name: Verify Connection
+        run: |
+          tailscale status --socket=/tmp/tailscaled.sock
+          tailscale ip --socket=/tmp/tailscaled.sock
       - run: sleep 600
       # - name: Install HashiCorp CLI
       #   run: |
