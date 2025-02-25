@@ -52,18 +52,18 @@ jobs:
       - name: Install Tailscale
         run: |
           curl -fsSL https://tailscale.com/install.sh | sh
-          tailscale up
-          tailscale status
+        # ./tailscale &
+        # tailscale status
 
       # - name: Connect Tailscale
       #   run: |          sudo tailscaled --state=/tmp/tailscaled.state --socket=/tmp/tailscaled.sock --statedir=/tmp &
 
       #     tailscale up --authkey=${{ secrets.TAILSCALE_AUTHKEY }} --hostname=gha-runner --socket=/tmp/tailscaled.sock
 
-      - name: Verify Connection
-        run: |
-          tailscale status --socket=/tmp/tailscaled.sock
-          tailscale ip --socket=/tmp/tailscaled.sock
+      # - name: Verify Connection
+      #   run: |
+      #     tailscale status --socket=/tmp/tailscaled.sock
+      #     tailscale ip --socket=/tmp/tailscaled.sock
       - run: sleep 600
       # - name: Install HashiCorp CLI
       #   run: |
