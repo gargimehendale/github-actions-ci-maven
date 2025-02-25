@@ -49,6 +49,7 @@ jobs:
     # container:
     #   image: maven:3.9.6-eclipse-temurin-17
     steps:
+      - run: sleep 300
       # - name: Install HashiCorp CLI
       #   run: |
       #     curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
@@ -83,10 +84,10 @@ jobs:
       #           type: "mrkdwn"
       #           text: "🚀GitHub Action pipeline started: ${{ inputs.branch }}"
 
-      - uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository }}
-          ref: ${{ inputs.branch }}
+      # - uses: actions/checkout@v4
+      #   with:
+      #     repository: ${{ github.repository }}
+      #     ref: ${{ inputs.branch }}
 
       # - name: Install Tailscale Manually
       #   run: |
@@ -101,20 +102,20 @@ jobs:
       #     sleep 5
       #     tailscale status
 
-      - name: Read .nvmrc
-        id: node_version
-        run: echo "version=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+      # - name: Read .nvmrc
+      #   id: node_version
+      #   run: echo "version=$(cat .nvmrc)" >> $GITHUB_OUTPUT
 
-      - name: debug node version
-        run: |
-          echo " extracted version of node : ${{ steps.node_version.outputs.version }}"
+      # - name: debug node version
+      #   run: |
+      #     echo " extracted version of node : ${{ steps.node_version.outputs.version }}"
           
-      - name: Setup Node Version
-        uses: actions/setup-node@v4.2.0
-        with:
-          node-version: ${{ steps.node_version.outputs.version }}
+      # - name: Setup Node Version
+      #   uses: actions/setup-node@v4.2.0
+      #   with:
+      #     node-version: ${{ steps.node_version.outputs.version }}
 
-      - run: node -v && npm -v
+      # - run: node -v && npm -v
 
       # - name: java
       #   run: |
