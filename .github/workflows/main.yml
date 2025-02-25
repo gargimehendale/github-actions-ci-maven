@@ -53,6 +53,8 @@ jobs:
         run: |
           curl -fsSL https://tailscale.com/install.sh | sh
           sudo tailscaled --state=/tmp/tailscaled.state --socket=/tmp/tailscaled.sock --statedir=/tmp &
+          tailscale up
+          tailscale status
 
       # - name: Connect Tailscale
       #   run: |
