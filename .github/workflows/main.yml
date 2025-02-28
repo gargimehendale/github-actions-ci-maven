@@ -99,6 +99,18 @@ jobs:
           webhook-type: incoming-webhook
           payload: |
             text: "${{ job.status == 'success' && '✅ Maven Build: *SUCCESS*' || '❌ Maven Build: *FAILED*' }}"
+            attachments:
+              - color: "${{ job.status == 'success' && 'good' || 'danger' }}"
+                fields:
+                  - title: "Repository"
+                    value: "${{ github.repository }}"
+                    short: true
+                  - title: "Branch"
+                    value: "${{ github.ref_name }}"
+                    short: true
+                  - title: "Pipeline"
+                    value: "${{ github.workflow }}"
+                    short: true
       
       # - name: Log in to Docker hub
       #   uses: docker/login-action@v3
