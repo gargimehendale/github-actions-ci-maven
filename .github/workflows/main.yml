@@ -101,7 +101,6 @@ jobs:
           webhook: ${{ env.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "${{ job.status == 'success' && '✅ Maven Build: *SUCCESS*' || '❌ Maven Build: *FAILED*' }}"
             attachments:
               - color: "${{ job.status == 'success' && 'good' || 'danger' }}"
                 fields:
@@ -115,7 +114,7 @@ jobs:
                     value: "${{ github.workflow }}"
                     short: true
                   - title: "JDK Setup"
-                    value: "${{ steps.jdk-setup.status == 'success' && '✅ SUCCESS' || '❌ FAILED' }}"
+                    value: "${{ steps.jdk-setup.outcome == 'success' && '✅ SUCCESS' || '❌ FAILED' }}"
                     short: false
                   - title: "Maven setup"
                     value: "${{ steps.maven-setup.outcome == 'success' && '✅ SUCCESS' || '❌ FAILED' }}"
