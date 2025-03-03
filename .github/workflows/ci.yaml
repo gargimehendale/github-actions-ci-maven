@@ -19,4 +19,4 @@ jobs:
     secrets:
       HCP_CLIENT_ID: ${{ secrets.HCP_CLIENT_ID }}
       HCP_CLIENT_SECRET: ${{ secrets.HCP_CLIENT_SECRET }}
-
+      PAT_FOR_GITHUB: ${{ secrets.PAT_FOR_GITHUB }}
