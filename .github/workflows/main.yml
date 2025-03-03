@@ -53,7 +53,7 @@ on:
 jobs:
   build:
     runs-on: arc-runner-set
-    # container:
+    ## container:
     #   image: maven:3.9.6-eclipse-temurin-17
     steps:
       - name: Install HashiCorp CLI
