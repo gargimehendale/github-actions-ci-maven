@@ -49,6 +49,8 @@ on:
         required: true
       HCP_CLIENT_SECRET:
         required: true
+      PAT_FOR_GITHUB:
+        required: true
   
 jobs:
   build:
@@ -83,6 +85,9 @@ jobs:
         with:
           repository: ${{ github.repository }}
           ref: ${{ inputs.branch }}
+          
+      - name: Force Failure
+        run: exit 1
 
       - name: Set up JDK 17
         id: jdk-setup
@@ -91,10 +96,7 @@ jobs:
           java-version: ${{ inputs.jdk_version }}
           distribution: ${{ inputs.jdk_distribution }}
           cache: maven
-          
-      - name: Force Failure
-        run: exit 1
-
+    
       - name: Set up Maven
         id: maven-setup
         uses: s4u/setup-maven-action@v1.13.0
@@ -145,7 +147,7 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: "main.yml"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_FOR_GITHUB }}
           inputs: '{ "retry_count": "${{ env.NEXT_RETRY }}" }'
       # - name: Log in to Docker hub
       #   uses: docker/login-action@v3
