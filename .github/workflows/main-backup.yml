@@ -1,0 +1,240 @@
+name: Java CI with Maven
+
+on:
+  workflow_dispatch:
+    inputs:
+      retry_count:
+        description: "Retry count for the workflow"
+        required: false
+        default: "0"
+        type: string
+  workflow_call:
+    inputs:
+      branch:
+        description: 'Branch to trigger the build'
+        required: false
+        default: 'main'
+        type: string
+      docker_image_name:
+        description: 'Docker image name'
+        required: true
+        type: string
+      mvn_file:
+        description: 'Maven file'
+        required: false
+        default: 'pom.xml'
+        type: string
+      mvn_options:
+        description: 'Additional Maven options'
+        required: false
+        default: '-B'
+        type: string
+      mvn_actions:
+        description: 'Additional Maven actions'
+        required: false
+        default: 'package'
+        type: string
+      jdk_version:
+        description: 'JDK version to use'
+        required: false
+        default: '17'
+        type: string
+      jdk_distribution:
+        description: 'JDK distribution to use'
+        required: false
+        default: 'temurin'
+        type: string
+    secrets:
+      HCP_CLIENT_ID:
+        required: true
+      HCP_CLIENT_SECRET:
+        required: true
+  
+jobs:
+  build:
+    runs-on: arc-runner-set
+    ## container:
+    #   image: maven:3.9.6-eclipse-temurin-17
+    steps:
+      - name: Install HashiCorp CLI
+        run: |
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+          sudo apt update && sudo apt install -y hcp 
+
+      - name: Authenticate with HCP Vault Secrets
+        id: authenticate
+        env:
+          HCP_CLIENT_ID: ${{ secrets.HCP_CLIENT_ID }}
+          HCP_CLIENT_SECRET: ${{ secrets.HCP_CLIENT_SECRET }}
+        run: |
+          hcp auth login --client-id $HCP_CLIENT_ID --client-secret $HCP_CLIENT_SECRET
+     
+      - name: Retrieve Secret
+        id: retrieve_secret
+        run: |
+          hcp vault-secrets run env --app github-ci-secrets >> $GITHUB_ENV
+          while IFS='=' read -r key value; do
+            echo "::add-mask::$key"
+            echo "::add-mask::$value"
+          done < <(hcp vault-secrets run env --app github-ci-secrets)
+          
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ inputs.branch }}
+
+      - name: Set up JDK 17
+        id: jdk-setup
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ inputs.jdk_version }}
+          distribution: ${{ inputs.jdk_distribution }}
+          cache: maven
+          
+      - name: Force Failure
+        run: exit 1
+
+      - name: Set up Maven
+        id: maven-setup
+        uses: s4u/setup-maven-action@v1.13.0
+        with:
+          maven-version: '3.9.6'
+        
+      # - name: Build with Maven
+      #   run: mvn ${{ inputs.mvn_options }} ${{inputs.mvn_actions}} --file ${{ inputs.mvn_file }}
+      
+      - name: Post a message in a channel
+        if: always()
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook: ${{ env.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            attachments:
+              - color: "${{ job.status == 'success' && 'good' || 'danger' }}"
+                fields:
+                  - title: "Repository"
+                    value: "${{ github.repository }}"
+                    short: true
+                  - title: "Branch"
+                    value: "${{ github.ref_name }}"
+                    short: true
+                  - title: "Pipeline"
+                    value: "${{ github.workflow }}"
+                    short: true
+                  - title: "JDK Setup"
+                    value: "${{ steps.jdk-setup.outcome == 'success' && '✅ SUCCESS' || '❌ FAILED' }}"
+                    short: false
+                  - title: "Maven setup"
+                    value: "${{ steps.maven-setup.outcome == 'success' && '✅ SUCCESS' || '❌ FAILED' }}"
+                    short: false
+                  - title: "JFrog Artifact Upload"
+                    value: "${{ steps.retrieve_secret.outcome == 'success' && '✅ SUCCESS' || '❌ FAILED' }}"
+                    short: false
+                    
+  retry-entire-workflow:
+      if: failure() && inputs.retry_count < 3  # Use inputs.retry_count instead of env.RETRY_COUNT
+      needs: [build]
+      runs-on: ubuntu-latest
+      steps:
+      - name: Increase Retry Count
+        run: echo "NEXT_RETRY=$(( ${{ inputs.retry_count }} + 1 ))" >> $GITHUB_ENV
+
+      - name: Retry Entire Workflow
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: "main.yml"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          inputs: '{ "retry_count": "${{ env.NEXT_RETRY }}" }'
+      # - name: Log in to Docker hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ env.DOCKER_USERNAME }}
+      #     password: ${{ env.DOCKER_PASSWORD }}
+
+      # - name: Build Docker image
+      #   run: |
+      #      docker build -t ${{ env.DOCKER_USERNAME }}/${{ inputs.docker_image_name }}:latest .
+           
+      # - name: Post a message in Slack
+      #   if: always()  
+      #   uses: slackapi/slack-github-action@v2.0.0
+      #   with:
+      #     webhook: ${{ env.SLACK_WEBHOOK_URL }}
+      #     webhook-type: incoming-webhook
+      #     payload: |
+      #       text: "${{ job.status == 'success' && '✅ Docker image build: *SUCCESS*' || '❌ Docker image build : *FAILED*' }}"
+
+      # - name: Scan Docker image 
+      #   uses: snyk/actions/docker@master
+      #   continue-on-error: true
+      #   with:
+      #     image: ${{ env.DOCKER_USERNAME }}/${{ inputs.docker_image_name }}:latest
+      #     args: --severity-threshold=high 
+      #   env: 
+      #     SNYK_TOKEN: ${{ env.SNYK_TOKEN }}
+        
+      # - name: Post a message in a channel
+      #   if: always()
+      #   uses: slackapi/slack-github-action@v2.0.0
+      #   with:
+      #     webhook: ${{ env.SLACK_WEBHOOK_URL }}
+      #     webhook-type: incoming-webhook
+      #     payload: |
+      #       text: "${{ job.status == 'success' && '✅ Snyk image scan: *SUCCESS*' || '❌ Snyk image scan: *FAILED*' }}"
+        
+      # - name: JFrog CLI Setup
+      #   uses: jfrog/setup-jfrog-cli@v4
+      #   env:
+      #     JF_URL: ${{ env.JFROG_URL }}
+      #     JF_USER: ${{ env.JFROG_USERNAME }}
+      #     JF_PASSWORD: ${{ env.JFROG_TOKEN }}
+        
+      # - name: Upload JAR to JFrog Artifactory
+      #   run: |
+      #      jf rt u "target/*.jar" "github-ci-maven/"
+         
+      # - name: Post a message in a channel
+      #   if: always()
+      #   uses: slackapi/slack-github-action@v2.0.0
+      #   with:
+      #     webhook: ${{ env.SLACK_WEBHOOK_URL }}
+      #     webhook-type: incoming-webhook
+      #     payload: |
+      #       text: "${{ job.status == 'success' && '✅ Uploading Maven Jars to JFrog: *SUCCESS*' || '❌ Uploading Maven Jars to JFrog: *FAILED*' }}"
+        
+      # - name: Push Docker Image to docker Hub
+      #   run: |
+      #      docker push ${{ env.DOCKER_USERNAME }}/${{ inputs.docker_image_name }}:latest 
+  
+      # - name: Post a message in a channel
+      #   if: always()
+      #   uses: slackapi/slack-github-action@v2.0.0
+      #   with:
+      #     webhook: ${{ env.SLACK_WEBHOOK_URL }}
+      #     webhook-type: incoming-webhook
+      #     payload: |
+      #       text: "${{ job.status == 'success' && '✅ Uploading image to Dockerhub: *SUCCESS*' || '❌ Uploading image to Dockerhub: *FAILED*' }}"
+        
+      # - name: Tag Image for JFrog
+      #   run: |
+      #      docker tag ${{ env.DOCKER_USERNAME }}/${{ inputs.docker_image_name }}:latest ${{ env.JFROG_DOMAIN }}/github-ci-docker/${{ inputs.docker_image_name }}:latest
+         
+      # - name: Log in to JFrog Docker Registry
+      #   run: |
+      #      echo ${{ env.JFROG_DOCKER_TOKEN }} | docker login ${{ env.JFROG_DOMAIN }} -u ${{ env.JFROG_USERNAME }} --password-stdin
+         
+      # - name: Push Docker Image to JFrog
+      #   run: |
+      #      docker push ${{ env.JFROG_DOMAIN }}/github-ci-docker/${{ inputs.docker_image_name }}:latest  
+           
+      # - name: Post a message in a channel
+      #   if: always()
+      #   uses: slackapi/slack-github-action@v2.0.0
+      #   with:
+      #     webhook: ${{ env.SLACK_WEBHOOK_URL }}
+      #     webhook-type: incoming-webhook
+      #     payload: |
+      #       text: "${{ job.status == 'success' && '✅ Uploading image to JFrog: *SUCCESS*' || '❌ Uploading image to JFrog: *FAILED*' }}"
+ 
