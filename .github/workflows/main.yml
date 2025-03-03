@@ -122,7 +122,21 @@ jobs:
                   - title: "JFrog Artifact Upload"
                     value: "${{ steps.retrieve_secret.outcome == 'success' && '✅ SUCCESS' || '❌ FAILED' }}"
                     short: false
-      
+                    
+  retry-entire-workflow:
+      if: failure() && inputs.retry_count < 3  # Use inputs.retry_count instead of env.RETRY_COUNT
+      needs: [build]
+      runs-on: ubuntu-latest
+      steps:
+      - name: Increase Retry Count
+        run: echo "NEXT_RETRY=$(( ${{ inputs.retry_count }} + 1 ))" >> $GITHUB_ENV
+
+      - name: Retry Entire Workflow
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: "main.yml"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          inputs: '{ "retry_count": "${{ env.NEXT_RETRY }}" }'
       # - name: Log in to Docker hub
       #   uses: docker/login-action@v3
       #   with:
@@ -213,4 +227,4 @@ jobs:
       #     webhook-type: incoming-webhook
       #     payload: |
       #       text: "${{ job.status == 'success' && '✅ Uploading image to JFrog: *SUCCESS*' || '❌ Uploading image to JFrog: *FAILED*' }}"
-            
+ 
