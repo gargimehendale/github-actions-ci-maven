@@ -1,6 +1,13 @@
 name: Java CI with Maven
 
 on:
+  workflow_dispatch:
+    inputs:
+      retry_count:
+        description: "Retry count for the workflow"
+        required: false
+        default: "0"
+        type: string
   workflow_call:
     inputs:
       branch:
@@ -84,6 +91,9 @@ jobs:
           java-version: ${{ inputs.jdk_version }}
           distribution: ${{ inputs.jdk_distribution }}
           cache: maven
+          
+      - name: Force Failure
+        run: exit 1
 
       - name: Set up Maven
         id: maven-setup
