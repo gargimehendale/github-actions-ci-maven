@@ -136,7 +136,7 @@ jobs:
     
       - name: Set up Maven
         id: maven-setup
-        uses: s4u/setup-maven-action@v1.13.0
+        uses: s4u/setup-maven-action@v1.18.0
         with:
           maven-version: '3.9.6'
         
