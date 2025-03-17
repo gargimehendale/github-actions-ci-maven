@@ -198,9 +198,10 @@ jobs:
 
       - name: Download Workflow Logs
         run: |
-          gh run view ${{ github.run_id }} --log > raw_logs.txt || true
+          gh run view ${{ github.run_id }} --log --repo ${{ github.repository }} > raw_logs.txt || true
         env:
-          GITHUB_TOKEN: ${{ secrets.read_token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
       - name: Check for Runner Failure
         id: check-failure
