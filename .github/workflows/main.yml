@@ -86,6 +86,8 @@ on:
         required: true
       PAT_FOR_GITHUB:
         required: true
+      read_token:
+        required: true
   
 jobs:
   build:
@@ -198,7 +200,7 @@ jobs:
         run: |
           gh run view ${{ github.run_id }} --log > raw_logs.txt || true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.read_token }}
 
       - name: Check for Runner Failure
         id: check-failure
@@ -220,7 +222,7 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: "Java CI with Maven"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.read_token }}
           inputs: >-
             {
               "retry_count": "${{ env.NEW_RETRY_COUNT }}",
