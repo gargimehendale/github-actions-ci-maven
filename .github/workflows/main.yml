@@ -196,12 +196,12 @@ jobs:
         run: |
           sudo apt update && sudo apt install gh -y
 
+
       - name: Download Workflow Logs
         run: |
           gh run view ${{ github.run_id }} --log --repo ${{ github.repository }} > raw_logs.txt || true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}     
 
       - name: Check for Runner Failure
         id: check-failure
