@@ -8,6 +8,41 @@ on:
         required: false
         default: "0"
         type: string
+      branch:
+        description: 'Branch to trigger the build'
+        required: false
+        default: 'main'
+        type: string
+      docker_image_name:
+        description: 'Docker image name'
+        required: true
+        type: string
+      mvn_file:
+        description: 'Maven file'
+        required: false
+        default: 'pom.xml'
+        type: string
+      mvn_options:
+        description: 'Additional Maven options'
+        required: false
+        default: '-B'
+        type: string
+      mvn_actions:
+        description: 'Additional Maven actions'
+        required: false
+        default: 'package'
+        type: string
+      jdk_version:
+        description: 'JDK version to use'
+        required: false
+        default: '17'
+        type: string
+      jdk_distribution:
+        description: 'JDK distribution to use'
+        required: false
+        default: 'temurin'
+        type: string
+
   workflow_call:
     inputs:
       branch:
@@ -106,137 +141,96 @@ jobs:
       # - name: Build with Maven
       #   run: mvn ${{ inputs.mvn_options }} ${{inputs.mvn_actions}} --file ${{ inputs.mvn_file }}
       
-      - name: Post a message in a channel
-        if: always()
-        uses: slackapi/slack-github-action@v2.0.0
-        with:
-          webhook: ${{ env.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            attachments:
-              - color: "${{ job.status == 'success' && 'good' || 'danger' }}"
-                fields:
-                  - title: "Repository"
-                    value: "${{ github.repository }}"
-                    short: true
-                  - title: "Branch"
-                    value: "${{ github.ref_name }}"
-                    short: true
-                  - title: "Pipeline"
-                    value: "${{ github.workflow }}"
-                    short: true
-                  - title: "JDK Setup"
-                    value: "${{ steps.jdk-setup.outcome == 'success' && '✅ SUCCESS' || '❌ FAILED' }}"
-                    short: false
-                  - title: "Maven setup"
-                    value: "${{ steps.maven-setup.outcome == 'success' && '✅ SUCCESS' || '❌ FAILED' }}"
-                    short: false
-                  - title: "JFrog Artifact Upload"
-                    value: "${{ steps.retrieve_secret.outcome == 'success' && '✅ SUCCESS' || '❌ FAILED' }}"
-                    short: false
+      # - name: Post a message in a channel
+      #   if: always()
+      #   uses: slackapi/slack-github-action@v2.0.0
+      #   with:
+      #     webhook: ${{ env.SLACK_WEBHOOK_URL }}
+      #     webhook-type: incoming-webhook
+      #     payload: |
+      #       attachments:
+      #         - color: "${{ job.status == 'success' && 'good' || 'danger' }}"
+      #           fields:
+      #             - title: "Repository"
+      #               value: "${{ github.repository }}"
+      #               short: true
+      #             - title: "Branch"
+      #               value: "${{ github.ref_name }}"
+      #               short: true
+      #             - title: "Pipeline"
+      #               value: "${{ github.workflow }}"
+      #               short: true
+      #             - title: "JDK Setup"
+      #               value: "${{ steps.jdk-setup.outcome == 'success' && '✅ SUCCESS' || '❌ FAILED' }}"
+      #               short: false
+      #             - title: "Maven setup"
+      #               value: "${{ steps.maven-setup.outcome == 'success' && '✅ SUCCESS' || '❌ FAILED' }}"
+      #               short: false
+      #             - title: "JFrog Artifact Upload"
+      #               value: "${{ steps.retrieve_secret.outcome == 'success' && '✅ SUCCESS' || '❌ FAILED' }}"
+      #               short: false
                     
-  retry-entire-workflow:
-      if: failure() && inputs.retry_count < 3  # Use inputs.retry_count instead of env.RETRY_COUNT
-      needs: [build]
-      runs-on: ubuntu-latest
-      steps:
-      - name: Increase Retry Count
-        run: echo "NEXT_RETRY=$(( ${{ inputs.retry_count }} + 1 ))" >> $GITHUB_ENV
+  # retry-entire-workflow:
+  #     if: failure() && inputs.retry_count < 3  # Use inputs.retry_count instead of env.RETRY_COUNT
+  #     needs: [build]
+  #     runs-on: ubuntu-latest
+  #     steps:
+  #     - name: Increase Retry Count
+  #       run: echo "NEXT_RETRY=$(( ${{ inputs.retry_count }} + 1 ))" >> $GITHUB_ENV
 
-      - name: Retry Entire Workflow
+  #     - name: Retry Entire Workflow
+  #       uses: benc-uk/workflow-dispatch@v1
+  #       with:
+  #         workflow: "main.yml"
+  #         token: ${{ secrets.PAT_FOR_GITHUB }}
+  #         inputs: '{ "retry_count": "${{ env.NEXT_RETRY }}" }'
+
+  check-runner-failure:
+    if: always()  # Ensures it runs even if `build` fails
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install GitHub CLI
+        run: |
+          sudo apt update && sudo apt install gh -y
+
+      - name: Download Workflow Logs
+        run: |
+          gh run view ${{ github.run_id }} --log > raw_logs.txt || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for Runner Failure
+        id: check-failure
+        run: |
+          if grep -q "The runner has received a shutdown signal" raw_logs.txt; then
+            echo "RUNNER_FAILED=true" >> $GITHUB_ENV
+          else
+            echo "RUNNER_FAILED=false" >> $GITHUB_ENV
+          fi
+
+      - name: Increment retry_count
+        id: increment-retry
+        run: |
+          NEXT_RETRY=$(( ${{ inputs.retry_count }} + 1 ))
+          echo "NEW_RETRY_COUNT=$NEXT_RETRY" >> $GITHUB_ENV
+
+      - name: Retry Workflow
+        if: env.RUNNER_FAILED == 'true' && env.NEW_RETRY_COUNT < 3
         uses: benc-uk/workflow-dispatch@v1
         with:
-          workflow: "main.yml"
-          token: ${{ secrets.PAT_FOR_GITHUB }}
-          inputs: '{ "retry_count": "${{ env.NEXT_RETRY }}" }'
-      # - name: Log in to Docker hub
-      #   uses: docker/login-action@v3
-      #   with:
-      #     username: ${{ env.DOCKER_USERNAME }}
-      #     password: ${{ env.DOCKER_PASSWORD }}
+          workflow: "Java CI with Maven"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          inputs: >-
+            {
+              "retry_count": "${{ env.NEW_RETRY_COUNT }}",
+              "branch": "${{ inputs.branch }}",
+              "docker_image_name": "${{ inputs.docker_image_name }}",
+              "mvn_file": "${{ inputs.mvn_file }}",
+              "mvn_options": "${{ inputs.mvn_options }}",
+              "mvn_actions": "${{ inputs.mvn_actions }}",
+              "jdk_version": "${{ inputs.jdk_version }}",
+              "jdk_distribution": "${{ inputs.jdk_distribution }}",
+            }
 
-      # - name: Build Docker image
-      #   run: |
-      #      docker build -t ${{ env.DOCKER_USERNAME }}/${{ inputs.docker_image_name }}:latest .
-           
-      # - name: Post a message in Slack
-      #   if: always()  
-      #   uses: slackapi/slack-github-action@v2.0.0
-      #   with:
-      #     webhook: ${{ env.SLACK_WEBHOOK_URL }}
-      #     webhook-type: incoming-webhook
-      #     payload: |
-      #       text: "${{ job.status == 'success' && '✅ Docker image build: *SUCCESS*' || '❌ Docker image build : *FAILED*' }}"
-
-      # - name: Scan Docker image 
-      #   uses: snyk/actions/docker@master
-      #   continue-on-error: true
-      #   with:
-      #     image: ${{ env.DOCKER_USERNAME }}/${{ inputs.docker_image_name }}:latest
-      #     args: --severity-threshold=high 
-      #   env: 
-      #     SNYK_TOKEN: ${{ env.SNYK_TOKEN }}
-        
-      # - name: Post a message in a channel
-      #   if: always()
-      #   uses: slackapi/slack-github-action@v2.0.0
-      #   with:
-      #     webhook: ${{ env.SLACK_WEBHOOK_URL }}
-      #     webhook-type: incoming-webhook
-      #     payload: |
-      #       text: "${{ job.status == 'success' && '✅ Snyk image scan: *SUCCESS*' || '❌ Snyk image scan: *FAILED*' }}"
-        
-      # - name: JFrog CLI Setup
-      #   uses: jfrog/setup-jfrog-cli@v4
-      #   env:
-      #     JF_URL: ${{ env.JFROG_URL }}
-      #     JF_USER: ${{ env.JFROG_USERNAME }}
-      #     JF_PASSWORD: ${{ env.JFROG_TOKEN }}
-        
-      # - name: Upload JAR to JFrog Artifactory
-      #   run: |
-      #      jf rt u "target/*.jar" "github-ci-maven/"
-         
-      # - name: Post a message in a channel
-      #   if: always()
-      #   uses: slackapi/slack-github-action@v2.0.0
-      #   with:
-      #     webhook: ${{ env.SLACK_WEBHOOK_URL }}
-      #     webhook-type: incoming-webhook
-      #     payload: |
-      #       text: "${{ job.status == 'success' && '✅ Uploading Maven Jars to JFrog: *SUCCESS*' || '❌ Uploading Maven Jars to JFrog: *FAILED*' }}"
-        
-      # - name: Push Docker Image to docker Hub
-      #   run: |
-      #      docker push ${{ env.DOCKER_USERNAME }}/${{ inputs.docker_image_name }}:latest 
-  
-      # - name: Post a message in a channel
-      #   if: always()
-      #   uses: slackapi/slack-github-action@v2.0.0
-      #   with:
-      #     webhook: ${{ env.SLACK_WEBHOOK_URL }}
-      #     webhook-type: incoming-webhook
-      #     payload: |
-      #       text: "${{ job.status == 'success' && '✅ Uploading image to Dockerhub: *SUCCESS*' || '❌ Uploading image to Dockerhub: *FAILED*' }}"
-        
-      # - name: Tag Image for JFrog
-      #   run: |
-      #      docker tag ${{ env.DOCKER_USERNAME }}/${{ inputs.docker_image_name }}:latest ${{ env.JFROG_DOMAIN }}/github-ci-docker/${{ inputs.docker_image_name }}:latest
-         
-      # - name: Log in to JFrog Docker Registry
-      #   run: |
-      #      echo ${{ env.JFROG_DOCKER_TOKEN }} | docker login ${{ env.JFROG_DOMAIN }} -u ${{ env.JFROG_USERNAME }} --password-stdin
-         
-      # - name: Push Docker Image to JFrog
-      #   run: |
-      #      docker push ${{ env.JFROG_DOMAIN }}/github-ci-docker/${{ inputs.docker_image_name }}:latest  
-           
-      # - name: Post a message in a channel
-      #   if: always()
-      #   uses: slackapi/slack-github-action@v2.0.0
-      #   with:
-      #     webhook: ${{ env.SLACK_WEBHOOK_URL }}
-      #     webhook-type: incoming-webhook
-      #     payload: |
-      #       text: "${{ job.status == 'success' && '✅ Uploading image to JFrog: *SUCCESS*' || '❌ Uploading image to JFrog: *FAILED*' }}"
  
